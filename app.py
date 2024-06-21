@@ -1,5 +1,5 @@
 from flask import Flask, jsonify
-from scraping.scraper import scrape_links, scrape_article_content
+from scraping.scraper import monthly_report
 
 app = Flask(__name__)
 
@@ -9,13 +9,7 @@ def index():
 
 @app.route('/scrape')
 def scrape():
-    # Scrape articles
-    scraped_links = scrape_links()
-
-    # Scrape article content
-    article_content = scrape_article_content(scraped_links)
-
-    return jsonify(article_content)
+    return jsonify(monthly_report())
 
 
 if __name__ == '__main__':
