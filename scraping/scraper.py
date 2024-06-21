@@ -28,14 +28,14 @@ def scrape_article_content(links):
     for link in links:
         response = requests.get(link)
         soup = BeautifulSoup(response.content, 'html.parser')
+
+        # Find all the dates of the articles
+        dates = [date.text for date in soup.find_all('time')]
         
         # Find all text content in the article
         text_content = ' '.join([p.text.strip() for p in soup.find_all('p')])
-        
-        # Find all links to images in the article
-        image_links = [img['src'] for img in soup.find_all('img')]
-        
+
         # Append the text content and image links to the article_data list
-        article_data.append({'text_content': text_content, 'image_links': image_links})
-    
+        article_data.append({'date': dates, 'text_content': text_content})
+
     return article_data
