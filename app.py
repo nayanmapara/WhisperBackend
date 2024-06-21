@@ -16,7 +16,7 @@ def index():
     return 'Welcome to CanScrape!'
 
 @app.route('/scrape')
-# @limiter.limit("10 per month")
+@limiter.limit("10 per month")
 def scrape():
     return jsonify(scrape_links())
 
