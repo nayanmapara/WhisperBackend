@@ -4,6 +4,8 @@ from urllib.parse import urljoin
 from datetime import datetime
 
 def scrape_links():
+    '''Scrape links from the Canada.ca website based on specific keywords.'''
+
     keywords = [
         'international student', 'work permit', 'study permit', 
         'post-graduation work permit', 'PGWP', 'study visa', 
@@ -11,11 +13,13 @@ def scrape_links():
         'family sponsorship', 'spousal sponsorship', 'parental sponsorship', 
         'super visa', 'visitor visa', 'temporary resident visa', 'TRV'
     ]
+
     domain = 'https://www.canada.ca'  # Domain name
     urls = [
         '/en/immigration-refugees-citizenship/news/notices.html',
         '/en/immigration-refugees-citizenship/news.html',
     ]
+
     links = set()  # Use a set to avoid duplicate links
     for url in urls:
         response = requests.get(urljoin(domain, url))
@@ -33,6 +37,8 @@ def scrape_links():
     return list(links)  # Convert back to list
 
 def scrape_article_content(links):
+    '''Scrape the content of the articles based on the provided links.'''
+
     article_data = []
     for link in links:
         response = requests.get(link)
@@ -52,6 +58,8 @@ def scrape_article_content(links):
     return article_data
 
 def monthly_report(current_date=None):
+    '''Generate a monthly report based on the latest articles from the Canada.ca website.'''
+
     latest_articles = []
 
     # Use current_date if provided, otherwise use the current date
