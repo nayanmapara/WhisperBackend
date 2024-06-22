@@ -18,12 +18,14 @@ def scrape_links():
     urls = [
         '/en/immigration-refugees-citizenship/news/notices.html',
         '/en/immigration-refugees-citizenship/news.html',
+        '/en/news/advanced-news-search/news-results.html?typ=newsreleases&dprtmnt=departmentofcitizenshipandimmigration',
     ]
 
     links = [] 
     for url in urls:
         response = requests.get(urljoin(domain, url))
         soup = BeautifulSoup(response.content, 'html.parser')
+        print(url)
         
         # Find all links
         for link in soup.find_all('a'):
@@ -37,7 +39,9 @@ def scrape_links():
                 if data:
                     links.append(data) # Append the data to the list of links
                 else:
-                    return links
+                    break
+
+    return links
 
 def scrape_article_content(link):
     '''Scrape the content of the articles based on the provided links.'''
@@ -54,7 +58,7 @@ def scrape_article_content(link):
     text_content = ' '.join([p.text.strip() for p in soup.find_all('p')])
 
     if date_checker(date) == True:
-        return {'date': date, 'text_content': text_content} # Return the date and text content
+        return {'date': date, 'url': link, 'text_content': text_content} # Return the date and text content
     else:
         return False
 
