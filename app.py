@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_cors import CORS
@@ -9,7 +9,7 @@ from pymongo import MongoClient, errors as PyMongoError
 
 from dotenv import load_dotenv
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Load environment variables
 load_dotenv()
@@ -90,6 +90,15 @@ def subscribe():
                 
     except PyMongoError as e:
         return jsonify({'error': str(e)}), 500
+    
+@app.route('/dashboard')
+def dashboard():
+    total_subscriptions = collection.count_documents({})
+    new_subscriptions = collection.count_documents({'created': {'$gte': datetime.utcnow() - timedelta(days=30)}})
+    
+    return render_template('dashboard.html', 
+                           total_subscriptions=total_subscriptions, 
+                           new_subscriptions=new_subscriptions)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <div class="container mx-auto p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-4xl font-bold text-blue-300">Dashboard</h1>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="metric bg-gray-800 p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-semibold">Total Subscriptions</h2>
+                <p class="text-3xl" id="totalSubscriptions">{{ total_subscriptions }}</p>
+            </div>
+            <div class="metric bg-gray-800 p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-semibold">New Subscriptions (Last 30 Days)</h2>
+                <p class="text-3xl" id="newSubscriptions">{{ new_subscriptions }}</p>
+            </div>
+        </div>
+        <div class="mt-6 bg-gray-800 p-6 rounded-lg shadow-lg">
+            <canvas id="subscriptionChart"></canvas>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('subscriptionChart').getContext('2d');
+            const subscriptionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Total Subscriptions', 'New Subscriptions'],
+                    datasets: [{
+                        label: 'Metrics',
+                        data: [
+                            {{ total_subscriptions }},
+                            {{ new_subscriptions }}
+                        ],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 99, 132, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
