@@ -3,7 +3,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_cors import CORS
 
-from .scraping.scraper import scrape_links
+from scraping.scraper import scrape_links
 
 from pymongo import MongoClient, errors as PyMongoError
 
