@@ -4,7 +4,6 @@ from flask_limiter.util import get_remote_address
 from flask_cors import CORS
 
 from scraping.scraper import scrape_links
-from emailing.mail import send_email
 
 from pymongo import MongoClient, errors as PyMongoError
 
@@ -21,17 +20,11 @@ app = Flask(__name__)
 CORS(app)
 
 # Set up MongoDB connection
+host = os.environ["DB_HOST"]
+password = os.environ["DB_PASS"]
 db_name = os.environ["DB_NAME"]
 db_collection = os.environ["DB_COLLECTION"]
-mongodb_uri = os.environ["MONGODB_URI"]
-
-# Define SMTP configuration
-smtp_config = {
-    'host': os.environ["SMTP_HOST"],
-    'port': int(os.environ["SMTP_PORT"]),
-    'user': os.environ["SMTP_USER"],
-    'password': os.environ["SMTP_PASSWORD"]
-}
+mongodb_uri = f"mongodb+srv://{host}:{password}@cluster0.gurdfx8.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 client = MongoClient(mongodb_uri)
 db = client[db_name]
@@ -97,23 +90,6 @@ def subscribe():
                 
     except PyMongoError as e:
         return jsonify({'error': str(e)}), 500
-    
-@app.route('/api/send_email', methods=['POST'])
-def send_custom_email():
-    data = request.json
-    to_email = data.get('to_email')
-    subject = data.get('subject')
-    html_content = data.get('html_content')
-
-    if not all([to_email, subject, html_content]):
-        return jsonify({'error': 'Missing required fields.'}), 400
-
-    success = send_email(smtp_config, to_email, subject, html_content)
-
-    if success:
-        return jsonify({'message': 'Email sent successfully.'}), 200
-    else:
-        return jsonify({'error': 'Failed to send email.'}), 500
     
 @app.route('/dashboard')
 def dashboard():
