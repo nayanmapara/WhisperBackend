@@ -3,8 +3,13 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_cors import CORS
 
-from scraping.scraper import scrape_links
-from emailing.mail import send_email
+
+try:
+    from .scraping.scraper import scrape_links
+    from .emailing.mail import send_email
+except ImportError:
+    from scraping.scraper import scrape_links
+    from emailing.mail import send_email
 
 from pymongo import MongoClient, errors as PyMongoError
 
