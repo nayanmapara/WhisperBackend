@@ -103,22 +103,36 @@ def subscribe():
     except PyMongoError as e:
         return jsonify({'error': str(e)}), 500
     
-@app.route('/api/send_email', methods=['POST'])
-def send_custom_email():
+@app.route('/api/send_emails', methods=['POST'])
+def send_emails():
     data = request.json
-    to_email = data.get('to_email')
-    subject = data.get('subject')
-    html_content = data.get('html_content')
 
-    if not all([to_email, subject, html_content]):
-        return jsonify({'error': 'Missing required fields.'}), 400
+    email_type = data.get('type') # 'Student' or 'WorkPermit'
+    email_data = data.get('email_data') # JSON with HTML content and subject
 
-    success = send_email(smtp_config, to_email, subject, html_content)
+    if not email_type or not email_data:
+        return jsonify({'error': 'Email type and email data are required'}), 400
 
-    if success:
-        return jsonify({'message': 'Email sent successfully.'}), 200
-    else:
-        return jsonify({'error': 'Failed to send email.'}), 500
+    subject = email_data.get('subject')
+    html_content = email_data.get('html_content')
+
+    if not subject or not html_content:
+        return jsonify({'error': 'Subject and HTML content are required'}), 400
+
+    # Fetch email addresses from MongoDB based on type
+    recipients = collection.find({'option': email_type}, {'email': 1, '_id': 0})
+    recipient_emails = [recipient['email'] for recipient in recipients]
+
+    if not recipient_emails:
+        return jsonify({'error': 'No recipients found for the specified type'}), 404
+
+    # Send emails
+    for email in recipient_emails:
+        success = send_email(smtp_config, email, subject, html_content)
+        if not success:
+            print(f"Failed to send email to: {email}")
+
+    return jsonify({'message': 'Emails sent successfully'}), 200
     
 @app.route('/dashboard')
 def dashboard():
