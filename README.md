@@ -8,6 +8,7 @@ WhisperBackend is a Flask-based backend for web scraping and user subscriptions,
 - API request rate limiting
 - Cross-Origin Resource Sharing (CORS) support
 - Dockerized deployment
+- Email sending functionality
 
 ## Prerequisites
 - Docker and Docker Compose
@@ -20,14 +21,28 @@ WhisperBackend is a Flask-based backend for web scraping and user subscriptions,
 Create a .env file at the root of your project directory with the following content:
 
 ```bash
+# DB
 DB_HOST=your_db_host
 DB_PASS=your_db_password
 DB_NAME=your_db_name
 DB_COLLECTION=your_db_collection
+MONGODB_URI=your_mongodb_uri
+
+# Email
+SMTP_HOST=your_smtp_host
+SMTP_PORT=your_smtp_port
+SMTP_USER=your_smtp_user
+SMTP_PASSWORD=your_smtp_password
 ```
 
-### Docker Compose
-Use Docker Compose to build and run the WhisperBackend service:
+### Docker / Docker Compose Setup
+Use **Docker** to build and run the WhisperBackend service:
+
+```bash
+docker build -t whisper-backend . && docker run -p 5000:5000 whisper-backend
+```
+
+Use **Docker Compose** to build and run the WhisperBackend service:
 
 ```bash
 docker-compose up --build
@@ -56,7 +71,7 @@ docker-compose up --build
        ```json
        {
          "email": "user@example.com",
-         "option": "daily"
+         "option": "Student" // or "WorkPermit"
        }
        ```
 
@@ -64,6 +79,21 @@ docker-compose up --build
 
    - **GET** `/dashboard`
      - Description: Displays metrics visualization for the backend service.
+
+5. **Send Emails**
+
+   - **POST** `/api/send_emails`
+     - Description: Sends emails to subscribers based on their subscription type.
+     - Request Body:
+       ```json
+       {
+         "type": "Student",  // or "WorkPermit"
+         "email_data": {
+           "subject": "Your Subject Here",
+           "html_content": "<html>Your HTML content here</html>"
+         }
+       }
+        ```
 
 > **Rate Limiting:** The WhisperBackend service uses Flask-Limiter to limit the number of API requests per user. The default rate limit is set to *10 requests per month* by default.
 
