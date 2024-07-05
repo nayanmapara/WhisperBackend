@@ -103,6 +103,26 @@ def subscribe():
     except PyMongoError as e:
         return jsonify({'error': str(e)}), 500
     
+@app.route('/api/unsubscribe', methods=['POST'])
+def unsubscribe():
+    data = request.json
+    email = data.get('email')
+    
+    if not email:
+        return jsonify({'error': 'Email is required'}), 400
+    
+    try:
+        # Remove the email from the database
+        result = collection.delete_one({'email': email})
+        
+        if result.deleted_count > 0:
+            return jsonify({'message': 'Unsubscribed successfully'}), 200
+        else:
+            return jsonify({'error': 'Email not found'}), 404
+                
+    except PyMongoError as e:
+        return jsonify({'error': str(e)}), 500
+    
 @app.route('/api/send_emails', methods=['POST'])
 def send_emails():
     data = request.json
