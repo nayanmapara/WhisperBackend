@@ -173,15 +173,30 @@ def unsubscribe():
         logger.error(f"MongoDB error during unsubscription for email {email}: {e}")
         return jsonify({'error': str(e)}), 500
     
-@app.route('/dashboard')
-def dashboard():
-    total_subscriptions = collection.count_documents({})
-    new_subscriptions = collection.count_documents({'created': {'$gte': datetime.utcnow() - timedelta(days=30)}})
+@app.route('/api/dashboard', methods=['GET'])
+def get_dashboard_metrics():
+    """
+    Retrieve dashboard metrics including total subscriptions and new subscriptions in the last 30 days.
     
-    logger.info("Dashboard accessed")
-    return render_template('dashboard.html', 
-                           total_subscriptions=total_subscriptions, 
-                           new_subscriptions=new_subscriptions)
+    Returns:
+        JSON response with total and new subscription counts.
+    """
+    try:
+        total_subscriptions_count = collection.count_documents({})
+        new_subscriptions_count = collection.count_documents({'created': {'$gte': datetime.utcnow() - timedelta(days=30)}})
+        
+        logger.info("Dashboard metrics retrieved successfully")
+        
+        response = {
+            'total_subscriptions': total_subscriptions_count,
+            'new_subscriptions_last_30_days': new_subscriptions_count
+        }
+        
+        return jsonify(response), 200
+
+    except PyMongoError as e:
+        logger.error(f"Error retrieving dashboard metrics: {e}")
+        return jsonify({'error': 'Error retrieving dashboard metrics'}), 500
 
 
 if __name__ == '__main__':
