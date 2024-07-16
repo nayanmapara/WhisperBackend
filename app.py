@@ -60,10 +60,17 @@ def index():
 @app.route('/api/scrape')
 @limiter.limit("10 per month")
 def scrape():
+    """
+    Scrape links from the web and return the results.
+    """
     return jsonify(scrape_links())
 
 @app.route('/api/subscribe', methods=['POST'])
 def subscribe():
+    """
+    Subscribe an email to receive emails of a specified type. (e.g., 'Student' or 'WorkPermit')
+    """
+
     data = request.json
     email = data.get('email')
     option = data.get('option')
@@ -161,6 +168,10 @@ def send_emails():
 
 @app.route('/api/unsubscribe', methods=['POST'])
 def unsubscribe():
+    """
+    Unsubscribe an email from receiving further emails.
+    """
+
     data = request.json
     email = data.get('email')
     
@@ -186,7 +197,7 @@ def unsubscribe():
 @app.route('/api/dashboard', methods=['GET'])
 def get_dashboard_metrics():
     """
-    Retrieve dashboard metrics including total subscriptions and new subscriptions in the last 30 days.
+    Retrieve dashboard metrics.
     
     Returns:
         JSON response with total and new subscription counts.
