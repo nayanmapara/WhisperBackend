@@ -1,7 +1,9 @@
 # WhisperBackend
+
 WhisperBackend is a Flask-based backend for web scraping and user subscriptions, hosted on Vercel with MongoDB. It extends Northern Whisper's capabilities, focusing on secure and scalable data management.
 
 ## Features
+
 - Web scraping
 - User subscription management
 - Dashboard for metrics visualization
@@ -11,13 +13,16 @@ WhisperBackend is a Flask-based backend for web scraping and user subscriptions,
 - Email sending functionality
 
 ## Prerequisites
+
 - Docker and Docker Compose
 - Python 3.7+
 - MongoDB
 - Vercel account for deployment
 
 ## Setup
+
 ### Environment Variables
+
 Create a .env file at the root of your project directory with the following content:
 
 ```bash
@@ -36,6 +41,7 @@ SMTP_PASSWORD=your_smtp_password
 ```
 
 ### Docker / Docker Compose Setup
+
 Use **Docker** to build and run the WhisperBackend service:
 
 ```bash
@@ -83,25 +89,39 @@ docker-compose up --build
 5. **Send Emails**
 
    - **POST** `/api/send_emails`
+
      - Description: Sends emails to subscribers based on their subscription type.
      - Request Body:
-       ```json
-       {
-         "type": "Student",  // or "WorkPermit"
-         "email_data": {
-           "subject": "Your Subject Here",
-           "html_content": "<html>Your HTML content here</html>"
-         }
-       }
-        ```
 
-> **Rate Limiting:** The WhisperBackend service uses Flask-Limiter to limit the number of API requests per user. The default rate limit is set to *10 requests per month* by default.
+       ```json
+       [
+         {
+           "type": "Student",
+           "email_data": {
+             "subject": "Updates for Students",
+             "html_content": "<html><body><h1>Hello Student</h1><p>Here are the latest updates for students.</p></body></html>"
+           }
+         },
+         {
+           "type": "WorkPermit",
+           "email_data": {
+             "subject": "Updates for Work Permit Holders",
+             "html_content": "<html><body><h1>Hello Work Permit Holder</h1><p>Here are the latest updates for work permit holders.</p></body></html>"
+           }
+         }
+       ]
+       ```
+
+> **Rate Limiting:** The WhisperBackend service uses Flask-Limiter to limit the number of API requests per user. The default rate limit is set to _10 requests per month_ by default.
 
 ## License
+
 This project is licensed under the Apache License 2.0. See [LICENSE](https://www.apache.org/licenses/LICENSE-2.0) for more details.
 
 ## Support
+
 For any issues or questions related to WhisperBackend, please [open an issue](https://github.com/nayanmapara/WhisperBackend/issues) on GitHub.
 
 ## Contributing
+
 Feel free to open issues or submit pull requests with improvements or bug fixes.

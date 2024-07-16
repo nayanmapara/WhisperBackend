@@ -116,38 +116,49 @@ def subscribe():
 
 @app.route('/api/send_emails', methods=['POST'])
 def send_emails():
-    data = request.json
+    """
+    Send emails to all recipients based on the specified type (e.g., 'Student' or 'WorkPermit')
+    provided in the request body. Each type will have its own subject and HTML content.
+    """
 
-    email_type = data.get('type') # 'Student' or 'WorkPermit'
-    email_data = data.get('email_data') # JSON with HTML content and subject
+    data_list = request.json  # Assuming the request body is a list of email data
 
-    if not email_type or not email_data:
-        logger.warning("Email type and email data are required for sending emails")
-        return jsonify({'error': 'Email type and email data are required'}), 400
+    if not isinstance(data_list, list):
+        logger.warning("Request data should be a list of email data")
+        return jsonify({'error': 'Request data should be a list of email data'}), 400
 
-    subject = email_data.get('subject')
-    html_content = email_data.get('html_content')
+    for data in data_list:
+        email_type = data.get('type')  # 'Student' or 'WorkPermit'
+        email_data = data.get('email_data')  # JSON with HTML content and subject
 
-    if not subject or not html_content:
-        logger.warning("Subject and HTML content are required for sending emails")
-        return jsonify({'error': 'Subject and HTML content are required'}), 400
+        if not email_type or not email_data:
+            logger.warning("Email type and email data are required for sending emails")
+            return jsonify({'error': 'Email type and email data are required'}), 400
 
-    # Fetch email addresses from MongoDB based on type
-    recipients = collection.find({'option': email_type}, {'email': 1, '_id': 0})
-    recipient_emails = [recipient['email'] for recipient in recipients]
+        subject = email_data.get('subject')
+        html_content = email_data.get('html_content')
 
-    if not recipient_emails:
-        logger.info(f"No recipients found for the specified type: {email_type}")
-        return jsonify({'error': 'No recipients found for the specified type'}), 404
+        if not subject or not html_content:
+            logger.warning("Subject and HTML content are required for sending emails")
+            return jsonify({'error': 'Subject and HTML content are required'}), 400
 
-    # Send emails
-    for email in recipient_emails:
-        success = send_email(smtp_config, email, subject, html_content)
-        if not success:
-            logger.error(f"Failed to send email to: {email}")
+        # Fetch email addresses from MongoDB based on type
+        recipients = collection.find({'option': email_type}, {'email': 1, '_id': 0})
+        recipient_emails = [recipient['email'] for recipient in recipients]
 
-    logger.info(f"Emails sent successfully to all recipients of type {email_type}")
-    return jsonify({'message': 'Emails sent successfully'}), 200
+        if not recipient_emails:
+            logger.info(f"No recipients found for the specified type: {email_type}")
+            continue  # Skip to the next data item
+
+        # Send emails
+        for email in recipient_emails:
+            success = send_email(smtp_config, email, subject, html_content)
+            if not success:
+                logger.error(f"Failed to send email to: {email}")
+
+        logger.info(f"Emails sent successfully to all recipients of type {email_type}")
+
+    return jsonify({'message': 'Emails sent successfully to all specified types'}), 200
 
 @app.route('/api/unsubscribe', methods=['POST'])
 def unsubscribe():
