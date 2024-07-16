@@ -117,11 +117,10 @@ def subscribe():
 @app.route('/api/send_emails', methods=['POST'])
 def send_emails():
     """
-    Send emails to all recipients based on the specified type (e.g., 'Student' or 'WorkPermit')
-    provided in the request body. Each type will have its own subject and HTML content.
+    Send emails to all recipients based on the specified type (e.g., 'Student' or 'WorkPermit') provided in the request body. Each type will have its own subject and HTML content.
     """
 
-    data_list = request.json  # Assuming the request body is a list of email data
+    data_list = request.json
 
     if not isinstance(data_list, list):
         logger.warning("Request data should be a list of email data")
