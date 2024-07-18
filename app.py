@@ -3,6 +3,8 @@ from flask import Flask, jsonify, request, render_template
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+import bcrypt
 
 try:
     from .scraping.scraper import scrape_links
@@ -12,7 +14,6 @@ except ImportError:
     from emailing.mail import send_email
 
 from pymongo import MongoClient, errors as PyMongoError
-
 from dotenv import load_dotenv
 import os
 from datetime import datetime, timedelta
@@ -32,6 +33,7 @@ CORS(app)
 # Set up MongoDB connection
 db_name = os.environ["DB_NAME"]
 db_collection = os.environ["DB_COLLECTION"]
+user_collection = os.environ["USER_COLLECTION"] 
 mongodb_uri = os.environ["MONGODB_URI"]
 
 # Define SMTP configuration
@@ -44,8 +46,8 @@ smtp_config = {
 
 client = MongoClient(mongodb_uri)
 db = client[db_name]
-
 collection = db[db_collection]
+users = db[user_collection]
 
 # Set up rate limiter
 limiter = Limiter(
@@ -53,11 +55,38 @@ limiter = Limiter(
     app=app
 )
 
+# Set up JWT manager
+app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=30)
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
+jwt = JWTManager(app)
+
 @app.route('/')
 def index():
     return 'Welcome to WhisperBackend!'
 
+@app.route('/api/login', methods=['POST'])
+def login():
+    """
+    Login endpoint to authenticate user and provide JWT token.
+    """
+    username = request.json.get('username')
+    password = request.json.get('password')
+
+    if not username or not password:
+        return jsonify({"msg": "Username and password are required"}), 400
+
+    # Fetch user data from the database
+    user = users.find_one({'username': username})
+    
+    if user and bcrypt.checkpw(password.encode('utf-8'), user['password']):
+        access_token = create_access_token(identity=username)
+        return jsonify(login=True, access_token=access_token), 200
+
+    return jsonify(login=False), 401
+
 @app.route('/api/scrape')
+@jwt_required()
 @limiter.limit("10 per month")
 def scrape():
     """
@@ -122,6 +151,7 @@ def subscribe():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/send_emails', methods=['POST'])
+@jwt_required()
 def send_emails():
     """
     Send emails to all recipients based on the specified type (e.g., 'Student' or 'WorkPermit') provided in the request body. Each type will have its own subject and HTML content.
@@ -195,6 +225,7 @@ def unsubscribe():
         return jsonify({'error': str(e)}), 500
     
 @app.route('/api/dashboard', methods=['GET'])
+@jwt_required()
 def get_dashboard_metrics():
     """
     Retrieve dashboard metrics.

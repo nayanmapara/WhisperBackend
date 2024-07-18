@@ -12,3 +12,5 @@ Flask-PyMongo
 python-dotenv
 gunicorn
 flask-cors
+bcrypt
+Flask-JWT-Extended
