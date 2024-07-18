@@ -4,3 +4,6 @@ __pycache__/
 
 # environment variables
 .env
+
+# Additional files
+user_creator.py
