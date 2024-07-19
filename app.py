@@ -48,6 +48,7 @@ client = MongoClient(mongodb_uri)
 db = client[db_name]
 collection = db[db_collection]
 users = db[user_collection]
+email_logs = db['email_logs']
 
 # Set up rate limiter
 limiter = Limiter(
@@ -60,6 +61,14 @@ app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=30)
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
 jwt = JWTManager(app)
+
+def log_email(email, status, opened=False):
+    email_logs.insert_one({
+        'email': email,
+        'status': status,
+        'timestamp': datetime.utcnow(),
+        'opened': opened
+    })
 
 @app.route('/')
 def index():
@@ -191,6 +200,10 @@ def send_emails():
             success = send_email(smtp_config, email, subject, html_content)
             if not success:
                 logger.error(f"Failed to send email to: {email}")
+                log_email(email, 'failed')
+            else:
+                logger.info(f"Email sent successfully to: {email}")
+                log_email(email, 'success')
 
         logger.info(f"Emails sent successfully to all recipients of type {email_type}")
 
