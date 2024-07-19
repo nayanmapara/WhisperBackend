@@ -247,14 +247,58 @@ def get_dashboard_metrics():
         JSON response with total and new subscription counts.
     """
     try:
+        # -------------- Subscription metrics --------------
         total_subscriptions_count = collection.count_documents({})
         new_subscriptions_count = collection.count_documents({'created': {'$gte': datetime.utcnow() - timedelta(days=30)}})
+
+        # Subscription growth rate
+        previous_period_count = collection.count_documents({'created': {'$gte': datetime.utcnow() - timedelta(days=60), '$lt': datetime.utcnow() - timedelta(days=30)}})
+        growth_rate = ((new_subscriptions_count - previous_period_count) / previous_period_count) * 100 if previous_period_count > 0 else 0
+
+        # Unsubscription rate
+        unsubscribed_count = collection.count_documents({'unsubscribed': True, 'unsubscribed_date': {'$gte': datetime.utcnow() - timedelta(days=30)}})
+
+        # Most popular subscription type
+        popular_subscription = collection.aggregate([
+            {'$group': {'_id': '$option', 'count': {'$sum': 1}}},
+            {'$sort': {'count': -1}},
+            {'$limit': 1}
+        ])
+        popular_subscription_type = next(popular_subscription, {'_id': 'None', 'count': 0})
+
+        # -------------- Email delivery metrics --------------
+        total_emails_sent = email_logs.count_documents({})
+        successful_emails_sent = email_logs.count_documents({'status': 'success'})
+        emails_failed = email_logs.count_documents({'status': 'failed'})
+
+        # Calculate email delivery success rate
+        email_logs = db['email_logs']
+        total_emails_sent = email_logs.count_documents({'timestamp': {'$gte': datetime.utcnow() - timedelta(days=30)}})
+        successful_emails_sent = email_logs.count_documents({'status': 'success', 'timestamp': {'$gte': datetime.utcnow() - timedelta(days=30)}})
+        email_success_rate = (successful_emails_sent / total_emails_sent) * 100 if total_emails_sent > 0 else 0
+
+        # Email open rate
+        emails_opened = email_logs.count_documents({'opened': True, 'timestamp': {'$gte': datetime.utcnow() - timedelta(days=30)}})
+        email_open_rate = (emails_opened / total_emails_sent) * 100 if total_emails_sent > 0 else 0
         
         logger.info("Dashboard metrics retrieved successfully")
         
         response = {
-            'total_subscriptions': total_subscriptions_count,
-            'new_subscriptions_last_30_days': new_subscriptions_count
+            'subscription_metrics': {
+                'total_subscriptions': total_subscriptions_count,
+                'new_subscriptions_last_30_days': new_subscriptions_count,
+                'subscription_growth_rate': growth_rate,
+                'unsubscribed_last_30_days': unsubscribed_count,
+                'most_popular_subscription_type': popular_subscription_type,
+
+            },
+            'email_metrics': {
+                'total_emails_sent': total_emails_sent,
+                'emails_opened': emails_opened,
+                'emails_failed': emails_failed,
+                'email_success_rate': email_success_rate,
+                'email_open_rate': email_open_rate
+            }
         }
         
         return jsonify(response), 200
